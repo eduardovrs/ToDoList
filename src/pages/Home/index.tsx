@@ -73,14 +73,15 @@ const Home = () => {
     setState(!state);
   }
 
-  const removeAsyncTask = useCallback(
+  const removeTask = useCallback(
     (id: string) => {
-      const removeTask = data.filter((task: IData) => task.id !== id);
-      setData(removeTask);
-      setNewData(removeTask);
+      const taskRemove = data.filter((task: IData) => task.id !== id);
+      const removeCheck = newData.filter((task: IData) => task.id !== id);
+      setData(taskRemove);
+      setNewData(removeCheck);
       setState(!state);
     },
-    [data, state],
+    [data, newData, state],
   );
 
   const verifyItem = useCallback(
@@ -130,7 +131,7 @@ const Home = () => {
                 </TaskNameText>
                 <TouchableOpacity
                   onPress={() => {
-                    removeAsyncTask(item.id);
+                    removeTask(item.id, item.IsPressed);
                   }}>
                   <TrashCanIcon name={'trash-can-outline'} size={25} />
                 </TouchableOpacity>
@@ -140,7 +141,7 @@ const Home = () => {
         </ScaleDecorator>
       );
     },
-    [newData, styles.rowItem, verifyItem, removeAsyncTask],
+    [newData, styles.rowItem, verifyItem, removeTask],
   );
 
   const draggableList = useMemo(
