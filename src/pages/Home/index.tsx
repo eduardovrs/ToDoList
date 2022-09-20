@@ -1,4 +1,5 @@
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+/* eslint-disable react-native/no-inline-styles */
+import React, {useCallback, useMemo, useState} from 'react';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import DraggableFlatList, {
   OpacityDecorator,
@@ -6,7 +7,7 @@ import DraggableFlatList, {
   ShadowDecorator,
   useOnCellActiveAnimation,
 } from 'react-native-draggable-flatlist';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-simple-toast';
 import {TouchableOpacity, StyleSheet} from 'react-native';
 import {
   AddTaskButton,
@@ -24,12 +25,18 @@ import {
   ConcludedText,
   TaskNameText,
   TaskRenderButton,
+  TaskCounterContainer,
+  TaskCounterText,
+  NoTasksContainer,
+  ClipboardIcon,
+  NoTaskText,
 } from './styles';
 import RadioButton from '../../components/RadioButton';
 
 interface IData {
   id: string;
   name: string;
+  isPressed: boolean;
 }
 
 const Home = () => {
@@ -37,70 +44,62 @@ const Home = () => {
   const [state, setState] = useState(true);
   const [taskName, setTaskName] = useState('');
   const randomNumber = String(Math.floor(1000000 + Math.random() * 999999));
-  const [asyncInfo, setAsyncInfo] = useState<IData[]>([]);
-  const [finishedButton, setFinisehdButton] = useState(false);
-  const dataKey = '@ToDoList:tasks';
+  const [newData, setNewData] = useState<IData[]>([]);
+  const [isChecked, setIsChecked] = useState<boolean>(true);
+  const createdTasks = data.length;
+  const concludedTasks = newData.filter(item => item.isPressed === true).length;
 
   const styles = StyleSheet.create({});
 
-  const getAsyncItems = useCallback(async () => {
-    const result = await AsyncStorage.getItem(dataKey);
-    const formatedResult = result ? JSON.parse(result) : [];
-    if (!result) {
-      return;
+  function addNewTask() {
+    const verifyTaskName = data.some(item => {
+      return item.name === taskName;
+    });
+
+    if (verifyTaskName) {
+      return Toast.show('Já existe uma tarefa com esse nome.');
     }
-    setAsyncInfo(formatedResult as unknown as IData[]);
-  }, []);
 
-  useEffect(() => {
-    getAsyncItems();
-  }, [getAsyncItems, state]);
-
-  async function addNewTask() {
-    // const verifyEventName = asyncInfo.some(item => {
-    //   return item.name === taskName;
-    // });
-
-    // if (verifyEventName) {
-    //   return Toast.show('Já existe um evento com esse nome.');
-    // }
-
-    // if (!taskName) {
-    //   return Toast.show('Não é possível adicionar um evento sem nome.');
-    // }
+    if (!taskName) {
+      return Toast.show('Não é possível adicionar uma tarefa sem nome.');
+    }
     const cardInfo = {
       id: randomNumber,
       name: taskName,
+      isPressed: isChecked,
     };
     setData(prevState => [...prevState, cardInfo]);
     setTaskName('');
-
-    try {
-      const eventData = await AsyncStorage.getItem(dataKey);
-      const curentData = eventData ? JSON.parse(eventData) : [];
-      const formatedData = [...curentData, cardInfo];
-      await AsyncStorage.setItem(dataKey, JSON.stringify(formatedData));
-      setState(!state);
-    } catch (error) {
-      console.log(error);
-    }
+    setState(!state);
   }
 
   const removeAsyncTask = useCallback(
-    async (id: string) => {
-      const response = await AsyncStorage.getItem(dataKey);
-      const previousData = response ? JSON.parse(response) : [];
-
-      const removeTask = previousData.filter((task: IData) => task.id !== id);
-      await AsyncStorage.setItem(dataKey, JSON.stringify(removeTask));
+    (id: string) => {
+      const removeTask = data.filter((task: IData) => task.id !== id);
       setData(removeTask);
+      setNewData(removeTask);
       setState(!state);
     },
-    [state],
+    [data, state],
+  );
+
+  const verifyItem = useCallback(
+    (item: IData) => {
+      const verifyNewData = newData.includes(item);
+      if (verifyNewData) {
+        setNewData([...newData].filter((task: IData) => task.id !== item.id));
+        setState(!state);
+      } else {
+        setNewData([...newData, item]);
+        setState(!state);
+      }
+    },
+    [state, newData],
   );
 
   const renderItem = useCallback(
     ({item, drag}) => {
+      const verifyNewData = newData.includes(item);
       const {isActive} = useOnCellActiveAnimation();
       return (
         <ScaleDecorator>
@@ -108,7 +107,7 @@ const Home = () => {
             <ShadowDecorator>
               <TaskRenderButton
                 onLongPress={drag}
-                delayLongPress={70}
+                delayLongPress={90}
                 activeOpacity={1}
                 style={[
                   styles.rowItem,
@@ -117,12 +116,18 @@ const Home = () => {
                   },
                 ]}>
                 <RadioButton
-                  isActive={finishedButton}
+                  isActive={verifyNewData}
                   onChangeButton={() => {
-                    setFinisehdButton(!finishedButton);
+                    verifyItem(item);
                   }}
                 />
-                <TaskNameText>{item.name}</TaskNameText>
+                <TaskNameText
+                  style={{
+                    textDecorationLine: verifyNewData ? 'line-through' : null,
+                    color: verifyNewData ? '#808080' : '#f2f2f2',
+                  }}>
+                  {item.name}
+                </TaskNameText>
                 <TouchableOpacity
                   onPress={() => {
                     removeAsyncTask(item.id);
@@ -135,21 +140,21 @@ const Home = () => {
         </ScaleDecorator>
       );
     },
-    [removeAsyncTask, styles.rowItem, finishedButton],
+    [newData, styles.rowItem, verifyItem, removeAsyncTask],
   );
 
   const draggableList = useMemo(
     () => (
       <GestureHandlerRootView>
         <DraggableFlatList
-          data={asyncInfo}
+          data={data}
           keyExtractor={item => item.id}
           onDragEnd={({data}) => setData(data)}
           renderItem={renderItem}
         />
       </GestureHandlerRootView>
     ),
-    [asyncInfo, renderItem],
+    [data, renderItem],
   );
 
   return (
@@ -164,26 +169,44 @@ const Home = () => {
             placeholderTextColor={'#808080'}
             onChangeText={setTaskName}
             color={'#F2F2F2'}
+            value={taskName}
           />
           <AddTaskButton
             onPress={() => {
               addNewTask();
             }}>
-            <PlusIcon name={'pluscircleo'} size={25} />
+            <PlusIcon name={'pluscircleo'} size={15} />
           </AddTaskButton>
         </AddTaskContainer>
       </Header>
+
       <TaskListView>
         <TaskStatus
           style={{
             borderBottomWidth: 0.5,
-            borderStyle: 'solid',
-            borderColor: '#808080',
+            borderStyle: !data ? null : 'solid',
+            borderColor: !data ? null : '#808080',
           }}>
           <CreatedText>Criadas</CreatedText>
+          <TaskCounterContainer>
+            <TaskCounterText>{createdTasks}</TaskCounterText>
+          </TaskCounterContainer>
           <ConcludedText>Concluídas</ConcludedText>
+          <TaskCounterContainer>
+            <TaskCounterText>{concludedTasks}</TaskCounterText>
+          </TaskCounterContainer>
         </TaskStatus>
-        <GestureHandlerRootView>{draggableList}</GestureHandlerRootView>
+        {data.length <= 0 ? (
+          <NoTasksContainer>
+            <ClipboardIcon size={56} name={'clipboard-pencil'} />
+            <NoTaskText>
+              Você ainda não tem tarefas cadastradas. {'\n'}Crie tarefas e
+              organize seus itens a fazer.
+            </NoTaskText>
+          </NoTasksContainer>
+        ) : (
+          <GestureHandlerRootView>{draggableList}</GestureHandlerRootView>
+        )}
       </TaskListView>
     </Container>
   );

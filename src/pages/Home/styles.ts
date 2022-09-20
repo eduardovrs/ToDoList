@@ -1,6 +1,11 @@
 import styled from 'styled-components/native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Foundation from 'react-native-vector-icons/Foundation';
+
+interface IFinishedButton {
+  isFinished: boolean;
+}
 
 export const Container = styled.View`
   flex: 1;
@@ -30,7 +35,7 @@ export const AddTaskContainer = styled.View`
 `;
 
 export const AddTaskButton = styled.TouchableOpacity`
-  height: 80%;
+  height: 90%;
   width: 13%;
   margin-left: 5px;
   border-radius: 6px;
@@ -46,9 +51,10 @@ export const PlusIcon = styled(AntDesign)`
 export const AddTaskTextInput = styled.TextInput`
   background-color: #262626;
   justify-content: flex-end;
-  height: 80%;
+  height: 90%;
   width: 60%;
   border-radius: 6px;
+  padding: 10px;
 `;
 
 export const TaskListView = styled.View`
@@ -59,8 +65,7 @@ export const TaskListView = styled.View`
 
 export const TaskStatus = styled.View`
   flex-direction: row;
-  justify-content: space-between;
-  padding: 7%;
+  padding: 5%;
 `;
 
 export const TrashCanIcon = styled(MaterialCommunityIcons)`
@@ -77,10 +82,10 @@ export const ConcludedText = styled.Text`
   color: #4ea8de;
   font-size: 14px;
   font-weight: bold;
+  margin-left: 48%;
 `;
 
-export const TaskNameText = styled.Text`
-  color: #f2f2f2;
+export const TaskNameText = styled.Text<IFinishedButton>`
   font-size: 14px;
 `;
 
@@ -93,4 +98,43 @@ export const TaskRenderButton = styled.TouchableOpacity`
   margin: 4px 24px;
   border-radius: 8px;
   padding: 12px;
+`;
+
+export const ScratchedTaskNameText = styled.Text`
+  color: #f2f2f2;
+  font-size: 14px;
+  text-decoration: line-through;
+`;
+
+export const NoTasksContainer = styled.View`
+  justify-content: center;
+  align-items: center;
+  margin-top: 20%;
+`;
+
+export const ClipboardIcon = styled(Foundation)`
+  color: #333333;
+  margin-bottom: 16px;
+`;
+
+export const NoTaskText = styled.Text`
+  color: #808080;
+  align-self: center;
+  font-size: 14px;
+`;
+
+export const TaskCounterContainer = styled.View`
+  background-color: #333333;
+  height: 19px;
+  width: 25px;
+  border-radius: 99px;
+  justify-content: center;
+  align-items: center;
+  margin-left: 8px;
+`;
+
+export const TaskCounterText = styled.Text`
+  font-size: 12px;
+  font-weight: 700;
+  color: #d9d9d9;
 `;
