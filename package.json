@@ -17,6 +17,7 @@
     "react-native-draggable-flatlist": "^3.1.2",
     "react-native-gesture-handler": "^2.6.0",
     "react-native-reanimated": "^2.10.0",
+    "react-native-simple-toast": "^1.1.4",
     "react-native-vector-icons": "^9.2.0",
     "styled-components": "^5.3.5",
     "styled-components-react-native": "^1.0.0"
