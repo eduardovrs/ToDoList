@@ -131,7 +131,7 @@ const Home = () => {
                 </TaskNameText>
                 <TouchableOpacity
                   onPress={() => {
-                    removeTask(item.id, item.IsPressed);
+                    removeTask(item.id);
                   }}>
                   <TrashCanIcon name={'trash-can-outline'} size={25} />
                 </TouchableOpacity>
